@@ -1,0 +1,16 @@
+com\wellnest\model\PrivacyLevel.class
+com\wellnest\model\LoveNote.class
+com\wellnest\model\SleepQuality.class
+com\wellnest\model\ChatMessage.class
+com\wellnest\repository\VoiceHugRepository.class
+com\wellnest\model\User.class
+com\wellnest\model\ChatRole.class
+com\wellnest\model\VoiceHug.class
+com\wellnest\model\AppNotification.class
+com\wellnest\config\WebConfig.class
+com\wellnest\config\OpenAIConfig.class
+com\wellnest\model\ActivityLevel.class
+com\wellnest\repository\ChatMessageRepository.class
+com\wellnest\model\DietLevel.class
+com\wellnest\model\MoodType.class
+com\wellnest\model\Role.class

@@ -1,0 +1,46 @@
+================================================================================
+  WELLNEST BACKEND (API) — WHAT THIS IS
+================================================================================
+
+Your website (the React app) runs in the browser.
+"Sign up" and "Login" need a SECOND program running on your computer:
+the Spring Boot "API" on port 8081.
+
+Think of it like:
+  - Browser = the shop front
+  - API     = the back office (saves accounts, passwords, data)
+
+If the API is not running, sign up will say it cannot reach the server.
+
+================================================================================
+  EASIEST WAY (WINDOWS)
+================================================================================
+
+1. Install Java 17+ and Apache Maven (if you do not have them).
+
+2. Double-click:  START_THE_API.bat   in this folder.
+
+3. Wait until you see a line like:  Started WellnestApplication
+
+4. Leave that black window OPEN.
+
+5. In another window, start the website:
+     cd to the "wellnest-family-circle" folder (parent of this "backend" folder)
+     npm run dev
+
+6. Open the site in the browser and try Sign up again.
+
+================================================================================
+  IF YOU USE INTELLIJ IDEA OR CURSOR WITH JAVA
+================================================================================
+
+1. Open the "backend" folder as a Maven project.
+
+2. Find:  src/main/java/com/wellnest/WellnestApplication.java
+
+3. Run it, but set "Active profiles" to:  dev
+   (dev = uses built-in test database, no MySQL install needed)
+
+4. Then run npm run dev for the frontend as above.
+
+================================================================================

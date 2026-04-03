@@ -5,6 +5,8 @@ import com.wellnest.model.AppNotification;
 import com.wellnest.model.User;
 import com.wellnest.repository.AppNotificationRepository;
 import com.wellnest.repository.UserRepository;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.HashMap;
 import java.util.List;
@@ -72,5 +74,13 @@ public class NotificationService {
     }
     n.setReadFlag(true);
     notificationRepository.save(n);
+  }
+
+  public boolean hasRecentByType(Long userId, String type, Duration within) {
+    if (userId == null || type == null || type.isBlank() || within == null || within.isNegative()) {
+      return false;
+    }
+    Instant cutoff = Instant.now().minus(within);
+    return notificationRepository.existsByUserIdAndTypeAndCreatedAtAfter(userId, type, cutoff);
   }
 }

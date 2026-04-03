@@ -9,6 +9,7 @@ import com.wellnest.model.DailyEntry;
 import com.wellnest.model.MoodType;
 import com.wellnest.model.User;
 import com.wellnest.repository.DailyEntryRepository;
+import com.wellnest.repository.UserRepository;
 import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -21,16 +22,22 @@ import org.springframework.transaction.annotation.Transactional;
 public class CheckinService {
 
   private final DailyEntryRepository dailyEntryRepository;
+  private final UserRepository userRepository;
+  private final NotificationService notificationService;
   private final OpenAiClient openAiClient;
   private final MLService mlService;
   private final BertEmotionService bertEmotionService;
 
   public CheckinService(
       DailyEntryRepository dailyEntryRepository,
+      UserRepository userRepository,
+      NotificationService notificationService,
       OpenAiClient openAiClient,
       MLService mlService,
       BertEmotionService bertEmotionService) {
     this.dailyEntryRepository = dailyEntryRepository;
+    this.userRepository = userRepository;
+    this.notificationService = notificationService;
     this.openAiClient = openAiClient;
     this.mlService = mlService;
     this.bertEmotionService = bertEmotionService;
@@ -40,15 +47,15 @@ public class CheckinService {
   public SaveCheckinResponse save(User user, DailyEntryRequest req) {
     LocalDate today = LocalDate.now();
     DailyEntry entry =
-        dailyEntryRepository
-            .findByUserAndEntryDate(user, today)
-            .orElseGet(
-                () -> {
-                  DailyEntry created = new DailyEntry();
-                  created.setUser(user);
-                  created.setEntryDate(today);
-                  return created;
-                });
+      dailyEntryRepository
+        .findByUserAndEntryDate(user, today)
+        .orElseGet(
+            () -> {
+              DailyEntry created = new DailyEntry();
+              created.setUser(user);
+              created.setEntryDate(today);
+              return created;
+            });
     entry.setSleepQuality(req.sleepQuality());
     entry.setActivity(req.activity());
     entry.setDiet(req.diet());
@@ -73,7 +80,44 @@ public class CheckinService {
       bertResult = buildBertResultForClient(entry);
     }
 
+    maybeNotifyFamilyOnStress(user, entry);
+
     return new SaveCheckinResponse(toResponse(entry), bertResult);
+  }
+
+  private void maybeNotifyFamilyOnStress(User motherUser, DailyEntry entry) {
+    if (motherUser.getId() == null) {
+      return;
+    }
+
+    boolean alertNow = isAlertMood(entry.getMood()) || isAlertEmotion(entry.getBertDetectedEmotion());
+    if (!alertNow) {
+      return;
+    }
+
+    List<User> linkedFamily = userRepository.findByLinkedMother_Id(motherUser.getId());
+    for (User family : linkedFamily) {
+      if (family.getId() == null) {
+        continue;
+      }
+      notificationService.create(
+          family.getId(),
+          "MOM_HIGH_STRESS",
+          "Mom Needs Attention",
+          "Your mother logged high stress today. A gentle check-in could help right now.");
+    }
+  }
+
+  private static boolean isAlertMood(MoodType mood) {
+    return mood == MoodType.STRESSED || mood == MoodType.SAD;
+  }
+
+  private static boolean isAlertEmotion(String emotion) {
+    if (emotion == null || emotion.isBlank()) {
+      return false;
+    }
+    String e = emotion.trim().toUpperCase();
+    return e.contains("STRESS") || e.contains("SAD") || e.contains("ANGER") || e.contains("FEAR");
   }
 
   @SuppressWarnings("unchecked")

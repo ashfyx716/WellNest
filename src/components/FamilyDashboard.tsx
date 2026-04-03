@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import WellnessRiskAlert from "./WellnessRiskAlert";
 import type { MomMlRiskApi } from "@/types/mlInsights";
+import { useNotifications } from "@/context/NotificationContext";
 
 interface Props {
   onLogout: () => void;
@@ -61,6 +62,7 @@ const FamilyDashboard = ({ onLogout, activeTab = "family", onTabChange, useLiveA
   const state = getState();
   const latest = state.entries[state.entries.length - 1];
   const { user } = useAuth();
+  const notif = useNotifications();
   const [sent, setSent] = useState<string | null>(null);
   const [mom, setMom] = useState<MomSummary | null>(null);
   const [calEntries, setCalEntries] = useState<DailyEntry[]>(state.entries);
@@ -212,6 +214,15 @@ const FamilyDashboard = ({ onLogout, activeTab = "family", onTabChange, useLiveA
 
   const isStressed = mom?.statusTone === "alert" || latest?.mood === "stressed";
   const isGood = mom?.statusTone === "good" || latest?.mood === "calm";
+  const urgentMomNotification = notif.items.find((n) => {
+    const type = (n.type || "").toLowerCase();
+    const text = `${n.title || ""} ${n.message || ""}`.toLowerCase();
+    return (
+      !n.read &&
+      (type.includes("stress") || type.includes("risk") || text.includes("stressed") || text.includes("stress")) &&
+      (text.includes("mom") || text.includes("mother"))
+    );
+  });
 
   const actions = [
     { emoji: "❤️", label: "Care Pulse", desc: "Thinking about you 💛", msg: "Thinking about you 💛" },
@@ -277,6 +288,24 @@ const FamilyDashboard = ({ onLogout, activeTab = "family", onTabChange, useLiveA
         message={momMlRisk?.message ?? ""}
         onSendCarePulse={() => void sendPulse("Thinking about you 💛")}
       />
+
+      {urgentMomNotification && (
+        <div className="mx-6 mb-4 glass-card-strong border-wellnest-coral/30 bg-wellnest-coral/10 p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-sm font-display font-bold text-foreground">{urgentMomNotification.title}</p>
+              <p className="mt-1 text-sm text-muted-foreground font-body">{urgentMomNotification.message}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => void notif.markRead(urgentMomNotification.id)}
+              className="text-xs font-body px-2 py-1 rounded-md hover:bg-muted"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
 
       <motion.div
         className={`mx-6 glass-card-strong mb-6 p-5 ${isStressed ? "border-wellnest-coral/30" : isGood ? "border-primary/30" : ""}`}

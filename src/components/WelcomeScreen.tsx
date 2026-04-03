@@ -8,9 +8,12 @@ interface WelcomeScreenProps {
 }
 
 const AnimatedTagline = ({ text }: { text: string }) => {
+  // Array.from preserves Unicode code points so emoji are not split into invalid halves.
+  const chars = Array.from(text);
+
   return (
-    <span className="inline-flex flex-wrap justify-center">
-      {text.split("").map((char, i) => (
+    <span className="inline-flex flex-nowrap whitespace-nowrap justify-center">
+      {chars.map((char, i) => (
         <motion.span
           key={i}
           initial={{ opacity: 0, y: 10 }}
@@ -106,7 +109,7 @@ const WelcomeScreen = ({ onLogin, onSignup, onGuest }: WelcomeScreenProps) => {
         </motion.div>
 
         {/* Animated tagline */}
-        <p className="text-lg text-muted-foreground max-w-xs font-body leading-relaxed">
+        <p className="text-base sm:text-lg text-muted-foreground font-body leading-relaxed whitespace-nowrap">
           <AnimatedTagline text="Your family's wellness, woven together 🌿" />
         </p>
 
